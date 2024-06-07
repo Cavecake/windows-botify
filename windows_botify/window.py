@@ -5,7 +5,7 @@ import win32ui
 import numpy as np
 from typing import Union
 import ctypes
-from Rectangle import Rect
+from .rectangle import Rect
 
 def __get_handle_from_function_params(window):
     if not isinstance(window, (str,int)):

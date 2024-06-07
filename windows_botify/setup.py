@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='windows_botify',
-    version="0.0.1",
+    version="0.0.4",
     url='https://github.com/Cavecake/windows-botify',
     author='cavecake',
     author_email='cavecake@web.de',
