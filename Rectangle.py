@@ -1,6 +1,6 @@
 class Rect:
     def __init__(self, *args):
-        if len(args) == 1 and isinstance(args[0], list) and len(args[0]) == 4:
+        if len(args) == 1 and isinstance(args[0], (list,tuple)) and len(args[0]) == 4:
             self.__list_to_points(args[0])
         elif len(args) == 2 and all(isinstance(arg, (list, tuple)) and len(arg) == 2 for arg in args):
             self.__two_points_init(args[0], args[1])
