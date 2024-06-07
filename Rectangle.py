@@ -35,7 +35,7 @@ class Rect:
         return (self.x1, self.y1), (self.x2, self.y2)
 
     def getDimensions(self):
-        return [self.x1, self.y1, self.getWidth(), self.getHeight()]
+        return (self.x1, self.y1), self.getWidth(), self.getHeight()
 
     def getWidth(self):
         return self.x2 - self.x1
