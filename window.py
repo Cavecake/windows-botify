@@ -128,6 +128,13 @@ def getWindowScreenshot(window, Windows_PrintWindow_Flag = 3):
     win32gui.ReleaseDC(hwnd, hwndDC)
 
     return arr
+
+def getPixelColor(window, x, y):
+    img = getWindowScreenshot(window)
+    if 0 <= y <= len(img) and 0 <= x < len(img[0]):
+        raise IndexError("Your points must be inside the window. (0,0) is the window corner")
+    return img[y][x]
+
 if __name__ == "__main__":
     moveToForeground("GitHub Desktop")
     print(getWindowHandle("GitHub Desktop"))
