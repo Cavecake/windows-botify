@@ -82,6 +82,16 @@ def minimizeWindow(window: Union[str,int]) -> None:
     hwnd = __get_handle_from_function_params(window)
     win32gui.ShowWindow(hwnd, win32con.SW_MINIMIZE)
 
+def move_window(window: Union[str,int], x, y):
+    """Move the window with the given handle to the specified position"""
+    hwnd = __get_handle_from_function_params(window)
+    win32gui.SetWindowPos(hwnd, 0, x, y, 0, 0, 0x0001 | 0x0002)  # SWP_NOSIZE | SWP_NOZORDER
+
+def scale_window(window: Union[str,int], width, height):
+    """Scale the window with the given handle to the specified size"""
+    hwnd = __get_handle_from_function_params(window)
+    win32gui.SetWindowPos(hwnd, 0, 0, 0, width, height, 0x0001 | 0x0002)  # SWP_NOMOVE | SWP_NOZORDER
+
 def getWindowScreenshot(window, Windows_PrintWindow_Flag = 3):
     hwnd = __get_handle_from_function_params(window)
     # Graphical interface (windows types)
