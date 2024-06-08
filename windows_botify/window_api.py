@@ -98,14 +98,14 @@ def getWindowRect(window: Union[str,int]) -> list:
     rect = Rect(rect)
     return rect
 
-def moveToForeground(window: Union[str,int]) -> None:
+def activateWindow(window: Union[str,int]) -> None:
     """Moves the window to the foreground
 
     Args:
         window (Union[str,int]): The window handle or window title
     """
     hwnd = __get_handle_from_function_params(window)
-    win32gui.SetForegroundWindow(hwnd)
+    win32gui.SetActiveWindow(hwnd)
 
 def minimizeWindow(window: Union[str,int]) -> None:
     """Moves the window to the background
@@ -247,5 +247,4 @@ def cvtScreenToWindowCoordinates(window: Union[int, str, Rect], x: int, y: int):
     return x - x2, y - y2
 
 if __name__ == "__main__":
-    moveToForeground("GitHub Desktop")
     print(getWindowHandle("GitHub Desktop"))
