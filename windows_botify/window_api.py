@@ -40,6 +40,15 @@ def isValidHandle(window_handle: int) -> bool:
         raise TypeError("Window handle must be an integer")
     return win32gui.IsWindow(window_handle)
 
+def enum_windows_callback(hwnd, titles):
+    if win32gui.IsWindowVisible(hwnd):
+        titles.append(win32gui.GetWindowText(hwnd))
+
+def get_all_window_titles():
+    titles = []
+    win32gui.EnumWindows(enum_windows_callback, titles)
+    return titles
+
 def getWindowHandle(window_title: str) -> int:
     """Gets the windows window handler [probably a pointer?]
 
