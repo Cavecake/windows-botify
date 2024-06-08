@@ -46,7 +46,7 @@ def getWindowHandle(window_title: str) -> int:
     # Returns a windows window handler object
     hwnd = win32gui.FindWindow(None, window_title)
 
-    if hwnd is None:
+    if hwnd is None or hwnd == 0:
         raise ValueError("The window does not exists")
     
     return hwnd
