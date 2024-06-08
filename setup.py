@@ -1,18 +1,7 @@
 from setuptools import setup, find_packages
 import subprocess
 
-# Getting version from github
-try:
-    tag = subprocess.check_output([
-        'git',
-        'describe',
-        '--abbrev=0',
-        '--tags',
-    ]).strip().decode()
-except subprocess.CalledProcessError:
-    tag = ' unknown'
-
-version = tag[1:]
+version = "0.0.6"
 
 setup(
     name='windows_botify',
