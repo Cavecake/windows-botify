@@ -8,6 +8,15 @@ import ctypes
 from .rectangle import Rect
 
 def __get_handle_from_function_params(window):
+    """Internal function. Do not use.
+    Converts a window str or handle to a hande. Checks validity
+
+    Args:
+        window (str, int): Window handle or window name
+
+    Returns:
+        int: The window handle
+    """
     if not isinstance(window, (str,int)):
         raise TypeError("Window must be the title (a string) or the handler (an integer)")
 
@@ -67,32 +76,65 @@ def isWindowOpen(window_title: str) -> bool:
     return hwnd is not None
 
 def getWindowRect(window: Union[str,int]) -> list:
+    """Gets the bounding Rect of the window
+
+    Args:
+        window (Union[str,int]): The window handle or window title
+
+    Returns:
+        Rect: The bounding Rect of the screen 
+    """
     hwnd = __get_handle_from_function_params(window)
     rect = win32gui.GetWindowRect(hwnd)
     rect = Rect(rect)
     return rect
 
 def moveToForeground(window: Union[str,int]) -> None:
-    """Moves the window with the given handle to the foreground"""
+    """Moves the window to the foreground
+
+    Args:
+        window (Union[str,int]): The window handle or window title
+    """
     hwnd = __get_handle_from_function_params(window)
     win32gui.SetForegroundWindow(hwnd)
 
 def minimizeWindow(window: Union[str,int]) -> None:
-    """Moves the window with the given handle to the background"""
+    """Moves the window to the background
+    
+    Args:
+        window (Union[str,int]): The window handle or window title
+    """
     hwnd = __get_handle_from_function_params(window)
     win32gui.ShowWindow(hwnd, win32con.SW_MINIMIZE)
 
 def move_window(window: Union[str,int], x, y):
-    """Move the window with the given handle to the specified position"""
+    """Move the window to the specified position
+    
+    Args:
+        window (Union[str,int]): The window handle or window title
+    """
     hwnd = __get_handle_from_function_params(window)
     win32gui.SetWindowPos(hwnd, 0, x, y, 0, 0, 0x0001 | 0x0002)  # SWP_NOSIZE | SWP_NOZORDER
 
 def scale_window(window: Union[str,int], width, height):
-    """Scale the window with the given handle to the specified size"""
+    """Scale the window to the specified size
+    
+    Args:
+        window (Union[str,int]): The window handle or window title
+    """
     hwnd = __get_handle_from_function_params(window)
     win32gui.SetWindowPos(hwnd, 0, 0, 0, width, height, 0x0001 | 0x0002)  # SWP_NOMOVE | SWP_NOZORDER
 
-def getWindowScreenshot(window, Windows_PrintWindow_Flag = 3):
+def getWindowScreenshot(window: Union[str,int], Windows_PrintWindow_Flag = 3):
+    """Takes a screenshot of the window
+
+    Args:
+        window (str, int): The windows window handle or the name of the window
+        Windows_PrintWindow_Flag (int, optional): Some flag, windows requires. In case the function does not work try to change the value. Defaults to 3.
+
+    Returns:
+        ndarray: A numpy array of the image.
+    """
     hwnd = __get_handle_from_function_params(window)
     # Graphical interface (windows types)
     hwndDC = win32gui.GetWindowDC(hwnd)
@@ -129,11 +171,71 @@ def getWindowScreenshot(window, Windows_PrintWindow_Flag = 3):
 
     return arr
 
-def getPixelColor(window, x, y):
-    img = getWindowScreenshot(window)
+def getPixelColor(window, x, y, isRelativeToWindow = False, Windows_PrintWindow_Flag = 3):
+    """Gets 
+
+    Args:
+        window (str, int): The handle or title for the window
+        x (int): The x position of the pixel
+        y (int): The y position of the pixel
+        isRelativeToWindow (bool, optional): Are the positions relative to the upper left screen corner or the upper left window corner. Defaults to False.
+        Windows_PrintWindow_Flag (int, optional): Some flag, windows requires. In case the function does not work try to change the value. Defaults to 3.
+
+    Returns:
+        tuple: The RGBA Color of the pixel
+    """
+    img = getWindowScreenshot(window,Windows_PrintWindow_Flag)
+    if isRelativeToWindow:
+        x, y = cvtScreenToWindowCoordinates(window, x, y)
+
     if 0 <= y <= len(img) and 0 <= x < len(img[0]):
         raise IndexError("Your points must be inside the window. (0,0) is the window corner")
     return img[y][x]
+
+def cvtWindowToScreenCoordinates(window: Union[int, str, Rect], x: int, y: int):
+    """Converts the coordinates relativ to the window corner to coordinates relative to the screen coordinates
+
+    Args:
+        window (Union[int, str, Rect]): Either the bounding Rect of the window, or the handle/title of the window
+        x (int): x coordinate
+        y (int): y coordinate
+    """
+    if not isinstance(x, int) or not isinstance(y, int) :
+        raise TypeError("Coordinates must be integers")
+    
+    if isinstance(window,(str,int)):
+        window_rect = getWindowRect(window)
+    elif isinstance(window, Rect):
+        window_rect = window
+    else:
+        raise TypeError("Window must be either the bounding Rect of the window, or the handle/title of the window")
+
+    upper_left, _ = window_rect.getCornerPoints()
+    x2, y2 = upper_left
+
+    return x2 + x, y2 + y
+def cvtScreenToWindowCoordinates(window: Union[int, str, Rect], x: int, y: int):
+    """Converts the coordinates relativ to the screen corner to coordinates relative to the window coordinates
+
+    Args:
+        window (Union[int, str, Rect]): Either the bounding Rect of the window, or the handle/title of the window
+        x (int): x coordinate
+        y (int): y coordinate
+    """
+    if not isinstance(x, int) or not isinstance(y, int) :
+        raise TypeError("Coordinates must be integers")
+    
+    if isinstance(window,(str,int)):
+        window_rect = getWindowRect(window)
+    elif isinstance(window, Rect):
+        window_rect = window
+    else:
+        raise TypeError("Window must be either the bounding Rect of the window, or the handle/title of the window")
+
+    upper_left, _ = window_rect.getCornerPoints()
+    x2, y2 = upper_left
+
+    return x - x2, y - y2
 
 if __name__ == "__main__":
     moveToForeground("GitHub Desktop")
