@@ -10,7 +10,7 @@ try:
         '--tags',
     ]).strip().decode()
 except subprocess.CalledProcessError:
-    tag = ' 0.0.6'
+    tag = ' unknown'
 
 version = tag[1:]
 
