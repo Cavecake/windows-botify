@@ -4,7 +4,8 @@ from .rectangle import Rect
 import win32con
 import win32api
 from typing import Union
-from warnings import warn
+import time
+import win32gui
 
 class MouseButton:
     LEFT = win32con.MK_LBUTTON
@@ -35,8 +36,19 @@ BUTTON_MODIFIERS = {
     MouseButton.MIDDLE: win32con.MK_MBUTTON,
 }
 
+def focus_unfocus(func):
+    def inner(window, *args, **kwargs):
+        process_hwnd = __get_handle_from_function_params(window)
+        # Attempt to set focus using win32gui.SetFocus()
+        old_hwnd = win32gui.GetForegroundWindow()
+        window_api.activateWindow(process_hwnd)
+        ans = func(window, *args, **kwargs)
+        window_api.activateWindow(old_hwnd)
+        return ans  # Return the result of the wrapped function
+    return inner
+
 def __createWparam(modifiers, buttons = []):
-    """Creates the Wparam for the SendMessage function
+    """Creates the Wparam for the PostMessage function
 
     Args:
         modifiers:  A set of modifier keys, e.g., {win32con.VK_SHIFT, win32con.VK_CONTROL}.
@@ -64,7 +76,7 @@ def getMousePos():
         x, y: Coordinates
     """
     return win32api.GetCursorPos()
-
+@focus_unfocus
 def ButtonDown(window,mouse_button, x = None, y = None, isRelativeToWindow = False, modifiers = []):
     """Presses the mouse button
 
@@ -95,8 +107,8 @@ def ButtonDown(window,mouse_button, x = None, y = None, isRelativeToWindow = Fal
     lParam = win32api.MAKELONG(x, y)
     wParam = __createWparam(modifiers,mouse_button)
 
-    win32api.SendMessage(hwnd,BUTTON_DOWN_MAP[mouse_button], wParam, lParam)
-
+    win32api.PostMessage(hwnd,BUTTON_DOWN_MAP[mouse_button], wParam, lParam)
+@focus_unfocus
 def ButtonUp(window,mouse_button):
     """Releases the mouse button
 
@@ -114,8 +126,8 @@ def ButtonUp(window,mouse_button):
     lParam = win32api.MAKELONG(x, y)
     wParam = mouse_button
 
-    win32api.SendMessage(hwnd,BUTTON_UP_MAP[mouse_button], wParam, lParam)
-
+    win32api.PostMessage(hwnd,BUTTON_UP_MAP[mouse_button], wParam, lParam)
+@focus_unfocus
 def Scroll(window,delta, modifiers = []):
     """Scrolls with the mouse
 
@@ -135,4 +147,4 @@ def Scroll(window,delta, modifiers = []):
     modifiers = __createWparam(modifiers)
     wParam = (delta << 16) | (modifiers & 0xFFFF)
 
-    win32api.SendMessage(hwnd, win32con.WM_MOUSEWHEEL, wParam, lParam)
+    win32api.PostMessage(hwnd, win32con.WM_MOUSEWHEEL, wParam, lParam)
