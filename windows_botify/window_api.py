@@ -7,6 +7,17 @@ from typing import Union
 import ctypes
 from .rectangle import Rect
 
+def __focus_unfocus(func):
+    def inner(window, *args, **kwargs):
+        process_hwnd = __get_handle_from_function_params(window)
+        # Attempt to set focus using win32gui.SetFocus()
+        old_hwnd = win32gui.GetForegroundWindow()
+        activateWindow(process_hwnd)
+        ans = func(window, *args, **kwargs)
+        activateWindow(old_hwnd)
+        return ans  # Return the result of the wrapped function
+    return inner
+
 def __get_handle_from_function_params(window):
     """Internal function. Do not use.
     Converts a window str or handle to a hande. Checks validity
@@ -100,11 +111,14 @@ def getWindowRect(window: Union[str,int]) -> list:
 
 def activateWindow(window: Union[str,int]) -> None:
     """Moves the window to the foreground
+    May not work, if the window executing the script is in another split screen pane than the window.
 
     Args:
         window (Union[str,int]): The window handle or window title
     """
     hwnd = __get_handle_from_function_params(window)
+    if win32gui.IsIconic(hwnd):
+        win32gui.ShowWindow(hwnd,win32con.SW_RESTORE)
     win32gui.SetActiveWindow(hwnd)
 
 def minimizeWindow(window: Union[str,int]) -> None:
