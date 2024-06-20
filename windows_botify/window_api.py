@@ -23,6 +23,7 @@ def enableInputFocus(window: Union[int,str], activationLevel = 0):
         case WindowActivationLevels.SetAsActive:
             return activateWindow(window)
         case WindowActivationLevels.MoveToForeground:
+            activateWindow(window)
             return moveWindowToForeground(window)
 
 def moveWindowToForeground(window: Union[int,str]):
