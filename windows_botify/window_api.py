@@ -7,16 +7,36 @@ from typing import Union
 import ctypes
 from .rectangle import Rect
 
-def __focus_unfocus(func):
-    def inner(window, *args, **kwargs):
-        process_hwnd = __get_handle_from_function_params(window)
-        # Attempt to set focus using win32gui.SetFocus()
-        old_hwnd = win32gui.GetForegroundWindow()
-        activateWindow(process_hwnd)
-        ans = func(window, *args, **kwargs)
-        activateWindow(old_hwnd)
-        return ans  # Return the result of the wrapped function
-    return inner
+class WindowActivationLevels:
+    NoActivation = 0
+    SetAsActive = 1
+    MoveToForeground = 2
+
+def enableInputFocus(window: Union[int,str], activationLevel = 0):
+    """Enables the window in the preferred level of activation, the higher the more reliable, but more intrusive
+
+    Args:
+        window (Union[int,str]): The window to be enabled
+        activationLevel (int, optional): The level of activation see class WindowActivationLevels for a description. Defaults to 0.
+    """
+    match activationLevel:
+        case WindowActivationLevels.SetAsActive:
+            return activateWindow(window)
+        case WindowActivationLevels.MoveToForeground:
+            return moveWindowToForeground(window)
+
+def moveWindowToForeground(window: Union[int,str]):
+    """Moves the window the the foreground
+
+    Args:
+        window (Union[int,str]): The handle or title
+    """
+    old_hwnd = win32gui.GetForegroundWindow()
+    hwnd = __get_handle_from_function_params(window)
+    if win32gui.IsIconic(hwnd):
+        win32gui.ShowWindow(hwnd,win32con.SW_RESTORE)
+    win32gui.SetForegroundWindow(hwnd)
+    return old_hwnd
 
 def __get_handle_from_function_params(window):
     """Internal function. Do not use.
@@ -110,16 +130,18 @@ def getWindowRect(window: Union[str,int]) -> list:
     return rect
 
 def activateWindow(window: Union[str,int]) -> None:
-    """Moves the window to the foreground
+    """Activates the window
     May not work, if the window executing the script is in another split screen pane than the window.
 
     Args:
         window (Union[str,int]): The window handle or window title
     """
+    old_hwnd = win32gui.GetActiveWindow()
     hwnd = __get_handle_from_function_params(window)
     if win32gui.IsIconic(hwnd):
         win32gui.ShowWindow(hwnd,win32con.SW_RESTORE)
     win32gui.SetActiveWindow(hwnd)
+    return old_hwnd
 
 def minimizeWindow(window: Union[str,int]) -> None:
     """Moves the window to the background
