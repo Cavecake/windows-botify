@@ -15,5 +15,6 @@ setup(
     ],
     install_requires = [
 
-    ]
+    ],
+    long_description_content_type='text/markdown'
 )
