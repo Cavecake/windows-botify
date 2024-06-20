@@ -59,7 +59,7 @@ For more detailed documentation, check out our wiki: [https://github.com/Cavecak
 
 setup(
     name='windows_botify',
-    version='0.1.0',
+    version='0.1.1',
     url='https://github.com/Cavecake/windows-botify',
     author='cavecake',
     author_email='cavecake@web.de',
