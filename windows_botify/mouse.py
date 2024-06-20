@@ -1,22 +1,12 @@
 from . import window_api
-from .window_api import __get_handle_from_function_params as __get_handle_from_function_params
-from .rectangle import Rect
+from .window_api import __get_handle_from_function_params
 import win32con
 import win32api
-from typing import Union
-import time
-import win32gui
 
 class MouseButton:
     LEFT = win32con.MK_LBUTTON
     RIGHT = win32con.MK_RBUTTON
     MIDDLE = win32con.MK_MBUTTON
-
-class Modifiers:
-    # All Modifieres a represented with a single bit
-    SHIFT = win32con.VK_SHIFT
-    CONTROL = win32con.VK_CONTROL
-    ALT = win32con.VK_MENU
 
 BUTTON_DOWN_MAP = {
     MouseButton.LEFT: win32con.WM_LBUTTONDOWN,
@@ -36,39 +26,6 @@ BUTTON_MODIFIERS = {
     MouseButton.MIDDLE: win32con.MK_MBUTTON,
 }
 
-def focus_unfocus(func):
-    def inner(window, *args, **kwargs):
-        process_hwnd = __get_handle_from_function_params(window)
-        # Attempt to set focus using win32gui.SetFocus()
-        old_hwnd = win32gui.GetForegroundWindow()
-        window_api.activateWindow(process_hwnd)
-        ans = func(window, *args, **kwargs)
-        window_api.activateWindow(old_hwnd)
-        return ans  # Return the result of the wrapped function
-    return inner
-
-def __createWparam(modifiers, buttons = []):
-    """Creates the Wparam for the PostMessage function
-
-    Args:
-        modifiers:  A set of modifier keys, e.g., {win32con.VK_SHIFT, win32con.VK_CONTROL}.
-
-    Returns:
-        wParam value.
-    """
-    wParam = 0
-    
-    # Bitwise OR the modifier key values to construct wParam
-    for modifier in modifiers:
-        wParam |= modifier
-
-    # Bitwise OR the mouse button values to construct wParam
-    for button in buttons:
-        wParam |= button
-    
-    return wParam
-
-
 def getMousePos():
     """Gets the position of the cursor
 
@@ -76,8 +33,8 @@ def getMousePos():
         x, y: Coordinates
     """
     return win32api.GetCursorPos()
-@focus_unfocus
-def ButtonDown(window,mouse_button, x = None, y = None, isRelativeToWindow = False, modifiers = []):
+
+def ButtonDown(window,mouse_button, x = None, y = None, isRelativeToWindow = False, activationLevel = 1):
     """Presses the mouse button
 
     Args:
@@ -86,10 +43,11 @@ def ButtonDown(window,mouse_button, x = None, y = None, isRelativeToWindow = Fal
         x (int, optional): The x position of the position the mouse should click. Defaults to None.
         y (int, optional): The y position of the position the mouse should click. Defaults to None.
         isRelativeToWindow (bool, optional): Are the coordinates relative to the screen or the window. Defaults to False.
-        modifiers (list, optional): Modifieres like Ctrl, Shift or Alt. (Use Modifiers from windows_botify.mouse) Defaults to [].
+        activationLevel (int, optional): The level of activation for the window, the input is send to (activation allows the process to process inputs)
     """
     hwnd = window_api.__get_handle_from_function_params(window) # Inbuilt error correction
-    
+    old_hwnd = window_api.enableInputFocus(hwnd,activationLevel)
+
     if x is None or y is None:
         x, y = getMousePos()
     elif isRelativeToWindow:
@@ -99,24 +57,27 @@ def ButtonDown(window,mouse_button, x = None, y = None, isRelativeToWindow = Fal
     
     if mouse_button not in BUTTON_DOWN_MAP.keys():
         raise ValueError("Invalid mouse button. Use the mouse.MOUSE_BUTTON.BUTTON_NAME values.")
-    
-    for modifier in modifiers:
-        if modifier not in {Modifiers.SHIFT, Modifiers.CONTROL, Modifiers.ALT}:
-            raise ValueError("Invalid modifier key. Use Modifiers.SHIFT, Modifiers.CONTROL, or Modifiers.ALT.")
 
     lParam = win32api.MAKELONG(x, y)
-    wParam = __createWparam(modifiers,mouse_button)
+    wParam = mouse_button
 
-    win32api.PostMessage(hwnd,BUTTON_DOWN_MAP[mouse_button], wParam, lParam)
-@focus_unfocus
-def ButtonUp(window,mouse_button):
+    win32api.PostMessage(hwnd,[BUTTON_DOWN_MAP[mouse_button]], wParam, lParam)
+
+    try:
+        window_api.enableInputFocus(old_hwnd,activationLevel)
+    except Exception:
+        pass
+
+def ButtonUp(window,mouse_button, activationLevel = 1):
     """Releases the mouse button
 
     Args:
         window (str, int): The title or handle for the window
         mouse_button (int): The windows button (Use MouseButton from windows_botify.mouse)
+        activationLevel (int, optional): The level of activation for the window, the input is send to (activation allows the process to process inputs)
     """
     hwnd = window_api.__get_handle_from_function_params(window) # Inbuilt error correction
+    old_hwnd = window_api.enableInputFocus(hwnd,activationLevel)
     
     x, y = getMousePos()
     
@@ -126,25 +87,35 @@ def ButtonUp(window,mouse_button):
     lParam = win32api.MAKELONG(x, y)
     wParam = mouse_button
 
-    win32api.PostMessage(hwnd,BUTTON_UP_MAP[mouse_button], wParam, lParam)
-@focus_unfocus
-def Scroll(window,delta, modifiers = []):
+    win32api.PostMessage(hwnd,[BUTTON_UP_MAP[mouse_button]], wParam, lParam)
+
+    try:
+        window_api.enableInputFocus(old_hwnd,activationLevel)
+    except Exception:
+        pass
+
+def Scroll(window,delta, activationLevel = 1):
     """Scrolls with the mouse
 
     Args:
         window (str, int): The title or handle for the window
         delta (_type_): The movement of the mouse positive = Scroll up
-        modifiers (list, optional): Modifieres like Ctrl, Shift or Alt. (Use Modifiers from windows_botify.mouse) Defaults to [].
+        activationLevel (int, optional): The level of activation for the window, the input is send to (activation allows the process to process inputs)
     """
     if not isinstance(delta, int):
         raise TypeError("Delta (scroll amount) must be an integer")
     
+
     hwnd = __get_handle_from_function_params(window)
+    old_hwnd = window_api.enableInputFocus(hwnd,activationLevel)
+
     x, y = getMousePos()  # Get the current cursor position
 
     lParam = win32api.MAKELONG(x, y)
-
-    modifiers = __createWparam(modifiers)
-    wParam = (delta << 16) | (modifiers & 0xFFFF)
+    wParam = (delta << 16) | (0 & 0xFFFF)
 
     win32api.PostMessage(hwnd, win32con.WM_MOUSEWHEEL, wParam, lParam)
+    try:
+        window_api.enableInputFocus(old_hwnd,activationLevel)
+    except Exception:
+        pass
