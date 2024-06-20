@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 
-with open('README.md', 'r', encoding='utf-8') as f:
-    long_description = """
+long_description = """
 **⚠️ Maintenance Notice**
 
 **This repository is still maintained, but the maintainer has switched to Linux.**
@@ -56,7 +55,7 @@ windows_botify.mouse.ButtonUp("GitHub Desktop", windows_botify.mouse.MouseButton
 
 For more detailed documentation, check out our wiki: [https://github.com/Cavecake/windows-botify/wiki](https://github.com/Cavecake/windows-botify/wiki)
 
-    """
+"""
 
 setup(
     name='windows_botify',
