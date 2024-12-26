@@ -1,8 +1,6 @@
 **⚠️ Maintenance Notice**
 
-**This repository is still maintained, but the maintainer has switched to Linux.**
-**As a result, while pull requests and bug fixes will be managed, the repository can no longer be tested on Windows.**
-**Contributions and testing from the community are highly appreciated.**
+**This repository will not be maintained.**
 
 # windows-botify
 
